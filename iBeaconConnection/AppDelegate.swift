@@ -7,15 +7,53 @@
 //
 
 import UIKit
+import UserNotifications
+import CoreLocation
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, CLLocationManagerDelegate {
 
     var window: UIWindow?
 
+    var view: BeaconTableViewController?
+
+    let locationMgr = CLLocationManager()
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        rangeBeacons()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        print(region.identifier)
+        pushNotification(str: "enter")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+        print(region.identifier)
+        pushNotification(str: "exit")
+    }
+    
+    func rangeBeacons(){
+
+        let id = "BeaconRegiontest"
+        //        let region = CLBeaconRegion(proximityUUID: uuid, major: major, identifier: id)
+        let region = CLBeaconRegion(proximityUUID: Constant.uuid, major: Constant.major, minor: Constant.minor, identifier: id)
+        locationMgr.startRangingBeacons(in: region)
+        locationMgr.startMonitoring(for: region)
+        
+    }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        locationMgr.requestAlwaysAuthorization()
+        UNUserNotificationCenter.current().delegate = self
+
+        
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: {_,_ in })
+        
+
+        
+        
         return true
     }
 
@@ -40,7 +78,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
-
+    
+    func pushNotification(str: String){
+        let content = UNMutableNotificationContent()
+        content.title = str
+        content.launchImageName = "faceless"
+        content.body = " I am body"
+        content.sound = UNNotificationSound.default
+        
+        let request3 = UNNotificationRequest(identifier: "notId2", content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request3, withCompletionHandler: nil)
+        
+    }
 
 }
 
